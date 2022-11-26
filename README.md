@@ -51,7 +51,7 @@ Q: There are four data conversions, how bad is the input lag?
 A: Still testing it on my MDX and playing with baud rates. At this point it is noticable when playing drum synths, but tolerable. 
 For non-drum synths it feels ok.
 
-However "tolerable" is subjective, so do not blame me if you will spent time building this project to find out that you hate the lag.
+However "tolerable" is subjective, so do not blame me if you will spend time building this project to find out that you hate the lag.
 Lag does exist, you are warned.
 
 
