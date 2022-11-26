@@ -2,7 +2,9 @@
 
 
 This is an DIY  implementation of  MIDI BLE  USB dongle  (similar to M-Vave MS-1 or CME WIDI devices).
-It is created solely for my purpose of connecting Artiphon Orba 2 as a BLE MIDI controller to control Mod Duo X guitar processor/synth.
+It is created solely for my purpose of connecting Artiphon Orba 2 as a BLE MIDI controller to control linux-based Mod Duo X guitar processor/synth.
+
+Being a MIDI class compliant thing, it with  on Windows as well, and probably would work even with linux, mac and phones. But I have not tried.
 
 It consists of two different controllers working together:
 
@@ -16,6 +18,11 @@ ESP32 fetches midi data from Orba 2 via BLE using https://github.com/max22-/ESP3
 
 STM32 receives data via UART using same arduino_midi_library, and forwards it to Mod Duo X (or PC)  via USB using  https://github.com/arpruss/USBComposite_stm32f1 library.
 
+
+All the mentioned things are chained as below:
+
+
+
 Orba2 -> (ESP32-BLE-MIDI) -> ESP32 -> (arduino_midi_library) -> STM32 -> (USBComposite_stm32f1 ) ->  USB (PC, or MDX)
 
 
@@ -27,13 +34,14 @@ ESP32 RX2 connected to A2 of STM32    // not used yet, but that's could be later
 ESP32 GND connected to GND of STM32   // ground
 
 !!!Warning, achtung, внимание!!! 
-3.3V of STM32 connected to ESP32 3.3v   // This will power ESP32 from STM32 but *please*, do not power ESP32 with USB cable when this wire is connected, \
-to evade magic smoke leaving it.
+	3.3V of STM32 connected to ESP32 3.3v   // This will power ESP32 from STM32 but *please*, do not power ESP32 with USB cable when this wire is connected, 
+	to evade magic smoke leaving it.
 
-I would suggest uploading firmwares before adding this last wiring connection. And if you will need change to firwmare, disconnect this wiring. 
+	I would suggest uploading firmwares before adding this last wiring connection. And if you will need change to firwmare, disconnect this wiring.  
 
-Powering ESP32 from two sources in the same time will most probably fry it. Or something else. Do not do it. 
- 
+	Powering ESP32 from two sources in the same time might most probably fry it. Or something else. Do not do it.  
+	
+!!!Warning, achtung, внимание!!! 
 
 
 Additional information Q&A:
@@ -42,7 +50,7 @@ Q: There are four data conversions, how bad is the input lag?
 A: Still testing it on my MDX and playing with baud rates. At this point it is noticable when playing drum synths, but tolerable. 
 For non-drum synths it feels ok.
 
-However "tolerable" is subjective, so do not blame me if you will spend time building this project to find out that you hate the lag.
+However "tolerable" is subjective, so do not blame me if you will spent time building this project to find out that you hate the lag.
 Lag does exist, you are warned.
 
 
@@ -54,12 +62,12 @@ Q: Will it work with Orba 1 ?
 A: I have no idea. It probably could - they are quite similar after all, and I've tried to guess device as "Artiphon Orba"  
 and added this name to filter, but I do not have Orba  1 to test.
 
-Q: Will it work as generic WIDI replacement with other MIDI devices?
+Q: Will it work as generic poor man's WIDI replacement with other MIDI devices?
 A: With some customization, I guess. 
 
    First of all, there are two filters DEVICE_TO_CONNECT1 DEVICE_TO_CONNECT2 defined in main.cpp of orbadongle_ESP32_ble_client.
-   By default, ESP32 will ignore any BLE midi devices that are not Orba, and determines if it is Orba by these filters.
-   (I have other MIDI ble stuff, and designed it to be sure that ESP32 will connect only to Orba.)
+   By default, ESP32 will ignore any BLE midi devices that are not Orba, and determines if it is Orba by these filters, seatching for "Artiphon Orba"  and "Artiphon Orba 2" .
+   (I have other MIDI ble stuff, and had written the code to be sure that ESP32 will connect only to Orba.)
    
    If you want something else - you can modify the filter to match your device name, or set  bool connect_to_any = true  nearby and ESP32 will connect to the first BLE MIDI devices it sees.
    
@@ -79,8 +87,9 @@ A: NoteOn, NoteOff, Pitchbend, ControlChange, ChannelAftertouch.
    
    This was written for handling Orba2, Orba2 does not seem to send anything else, so I was lazy and skipped implementing any other messages to be forwared.
    
-   If you are borrowing this code to implement your own midi ble to usb convertor for other use case,    
+   If you  are so desperate that yout are borrowing this ugly code to implement your own midi ble to usb convertor for other use case,    
     be notified that there are other handlers in  ESP32 BLE MIDI library, STM32 f103 USBCOMPOSITE library and arduino_midi_libraries you can use and add.
+	
     Some other messages could be implemented,  and some could not -  as there are 3 midi   underlying libraries involved, and if you need to stream a message type, it should be supported by all three libs.
 
     https://github.com/FortySevenEffects/arduino_midi_library/wiki/Using-Callbacks
@@ -89,5 +98,7 @@ A: NoteOn, NoteOff, Pitchbend, ControlChange, ChannelAftertouch.
 
     https://github.com/max22-/ESP32-BLE-MIDI/blob/master/examples/04-Dump-Messages/04-Dump-Messages.ino
 
+
+Cheers.
 
  
