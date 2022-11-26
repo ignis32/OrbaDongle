@@ -6,8 +6,10 @@ USBCompositeSerial CompositeSerial; // plus serial port, (instead of Serial obje
 
 #include <MIDI.h> // arduino_midi_library, to decode incoming data from ESP32
 
+#define TxRxSerial Serial2
+
 //#HardwareSerial TxRxSerial(2);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, UART_MIDI); //  RX on A3,  TX on A2
+MIDI_CREATE_INSTANCE(HardwareSerial, TxRxSerial, UART_MIDI); //  RX on A3,  TX on A2
 
 #define ONBOARD_LED PB2 // led to show commuincation activity
 #define BAUD_RATE 115200
@@ -127,7 +129,7 @@ void onAfterTouchChannel(byte channel, byte pressure)
 
 void init_uart_midi()
 {
-    Serial2.begin(BAUD_RATE); //  . Not sure if arduino_midi_library gets is though. TBD: VERIFY BAUD RATE.
+    TxRxSerial.begin(BAUD_RATE); //  . Not sure if arduino_midi_library gets is though. TBD: VERIFY BAUD RATE.
 
     // set handler functinos for incoming events
     UART_MIDI.setHandleNoteOn(onNoteOn);
@@ -142,6 +144,9 @@ void init_uart_midi()
     UART_MIDI.setHandleAfterTouchChannel(onAfterTouchChannel);
 
     UART_MIDI.begin(MIDI_CHANNEL_OMNI);
+    
+    TxRxSerial.begin(BAUD_RATE); // dirty hack to set custom baud rate. Documented approach does not work.
+
 }
 
 void init_usb_stuff()
@@ -164,6 +169,8 @@ void setup()
     init_usb_stuff();
     init_uart_midi();
     init_onboard_led();
+    CompositeSerial.print("UART Baud rate: ");
+    CompositeSerial.println("unknown");
 }
 
 void loop()

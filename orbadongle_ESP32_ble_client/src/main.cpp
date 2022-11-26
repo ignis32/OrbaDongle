@@ -2,11 +2,43 @@
 #include <BLEMidi.h>  // ESP32 BLE MIDI library
 #include <MIDI.h>  // fourtyseven arduino midi library
 
-HardwareSerial TxRxSerial(2);
+//HardwareSerial TxRxSerial(2);
+
+#define TxRxSerial Serial2
+
+
+#define BAUD_RATE 115200   // default midi baud rate was 31250
+
+
+//  nothing of these custom baud rates attempts worked as expected.
+//  setting baud rate as serial.begin somewhere in setup instead.
+
+
+
+/* 
+/// setting custom baud rate
+//struct CustomBaudRateSettings : public MIDI_NAMESPACE::DefaultSerialSettings {
+//  static const long BaudRate = BAUD_RATE;
+//};
+ 
+
+ struct MySettings : public midi::DefaultSettings {
+  static const long BaudRate = 115200;
+};
+ 
+//MIDI_NAMESPACE::SerialMIDI<HardwareSerial, CustomBaudRateSettings> serialMIDI(TxRxSerial);
+//MIDI_NAMESPACE::MidiInterface<MIDI_NAMESPACE::SerialMIDI<HardwareSerial, CustomBaudRateSettings>> MIDI((MIDI_NAMESPACE::SerialMIDI<HardwareSerial, CustomBaudRateSettings>&)serialMIDI);
+ 
+MIDI_CREATE_CUSTOM_INSTANCE(HardwareSerial, TxRxSerial, UART_MIDI,MySettings);
+
+*/
+
 MIDI_CREATE_INSTANCE(HardwareSerial, TxRxSerial, UART_MIDI);
 
+
+
 #define ONBOARD_LED 2 // regular wroom32 led to show connection state and activity, can be another pin for other devboards.   // #define ONBOARD_LED  5  // liligoboard
-#define BAUD_RATE 115200
+
 #define DEVICE_TO_CONNECT1 "Artiphon Orba 2" 
 #define DEVICE_TO_CONNECT2 "Artiphon Orba" 
 bool connect_to_any = false;     // ignore filtering and connect to the first ble midi device you see
@@ -28,6 +60,7 @@ void unblink() // enable led back, but only after  loop counter comes to zero.
     if (blink_counter <= 0)
     {
         digitalWrite(ONBOARD_LED, 1);
+        
     }
     else
     {
@@ -154,13 +187,18 @@ void setup()
     Serial.begin(115200);
     TxRxSerial.begin(BAUD_RATE, SERIAL_8N1, 16, 17);
     UART_MIDI.begin(MIDI_CHANNEL_OMNI);
+    TxRxSerial.begin(BAUD_RATE, SERIAL_8N1, 16, 17);  // Dirty hack to  enable custom baud rate.
 
     init_ble();
+
+     Serial.println(TxRxSerial.baudRate());
     
 }
 
 void loop()
 {
+
+   
 
     if (BLEMidiClient.isConnected())
     {
