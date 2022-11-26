@@ -44,7 +44,7 @@ ESP32 GND connected to GND of STM32   // ground
 !!!Warning, achtung, внимание!!! 
 
 
-Additional information Q&A:
+Q&A:
 
 Q: There are four data conversions, how bad is the input lag?
 A: Still testing it on my MDX and playing with baud rates. At this point it is noticable when playing drum synths, but tolerable. 
@@ -99,6 +99,25 @@ A: NoteOn, NoteOff, Pitchbend, ControlChange, ChannelAftertouch.
     https://github.com/max22-/ESP32-BLE-MIDI/blob/master/examples/04-Dump-Messages/04-Dump-Messages.ino
 
 
-Cheers.
+
+
+Additional taughts:
+
+
+I am still testing the solution, and it seems to work more or less.
+
+But I am concerned with following things:
+
+
+1) Orba2 provides very small pitchbend range, probably will have to add some amplification of the pitchbend later. Orba2 connected by USB directly does the same, BTW.
+
+2) I can feel some input lag on the periphery of my mind, especially for drums. 
+
+3)  There is no error correction in transferring data between stm32 and esp32, so theoretically it can lead to noteOns without closing noteOffs, 
+ and I am still not sure about if  I set baud rate for communication between controllers properly.
+
+4) Solution is not tested enough yet
+
+5) Also it involves programming two different microcontrollers, and it is unlikely that people who are not already into embedded programming are going to benefit benefit from this.
 
  
