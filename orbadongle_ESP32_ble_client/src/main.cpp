@@ -1,28 +1,38 @@
-
-
 #include <Arduino.h>
- 
-
-#include <BLEMidi.h>
-
-
+#include <BLEMidi.h>  // ESP32 BLE MIDI library
 #include <MIDI.h>  // fourtyseven arduino midi library
+
 HardwareSerial TxRxSerial(2);
-MIDI_CREATE_INSTANCE(HardwareSerial, TxRxSerial, DIN_MIDI);
+MIDI_CREATE_INSTANCE(HardwareSerial, TxRxSerial, UART_MIDI);
 
-
-#define ONBOARD_LED 2 // regular wroom32 led to show connection state, can be another pin for other devboards.   // #define ONBOARD_LED  5  // liligoboard
-#define DEVICE_TO_CONNECT "Artiphon Orba 2"
-
-int blink_counter = 0;
+#define ONBOARD_LED 2 // regular wroom32 led to show connection state and activity, can be another pin for other devboards.   // #define ONBOARD_LED  5  // liligoboard
+#define BAUD_RATE 115200
+#define DEVICE_TO_CONNECT1 "Artiphon Orba 2" 
+#define DEVICE_TO_CONNECT2 "Artiphon Orba" 
+bool connect_to_any = false;     // ignore filtering and connect to the first ble midi device you see
 bool text_debug = false;  // instead of sending binary stuff to Serial port, send text description.
 
 void connected();
 
+
+int blink_counter = 0;
+
 void blink() // temporary disable led on each event, to indicate activity.
 {
-    blink_counter = 32000;  // number of loops before enabling led back.
+    blink_counter = 32000;  // number of loops before enabling led back. 
     digitalWrite(ONBOARD_LED, 0);
+}
+
+void unblink() // enable led back, but only after  loop counter comes to zero.
+{
+    if (blink_counter <= 0)
+    {
+        digitalWrite(ONBOARD_LED, 1);
+    }
+    else
+    {
+        blink_counter--;
+    }
 }
 
 void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity, uint16_t timestamp)
@@ -31,12 +41,9 @@ void onNoteOn(uint8_t channel, uint8_t note, uint8_t velocity, uint16_t timestam
     {
         Serial.printf("Note on : channel %d, note %d, velocity %d (timestamp %dms)\n", channel, note, velocity, timestamp);
     }
-    else
-    {
-       // midi_note_on(channel, note, velocity);
-       DIN_MIDI.sendNoteOn(note, velocity, channel+1);
-    }
-
+   
+    UART_MIDI.sendNoteOn(note, velocity, channel+1);  // ESP32 BLE library counts  channels from zero, arduino_midi_library counts from 1
+   
     blink();
 }
 
@@ -44,59 +51,20 @@ void onNoteOff(uint8_t channel, uint8_t note, uint8_t velocity, uint16_t timesta
 {
     if (text_debug)
     {
-
-        
         Serial.printf("Note off : channel %d, note %d, velocity %d (timestamp %dms)\n", channel+1, note, velocity, timestamp);
     }
-    else
-    {
-        //midi_note_off(channel, note, velocity);
-         DIN_MIDI.sendNoteOff(note, velocity, channel+1);
-    }
-
+    
+    UART_MIDI.sendNoteOff(note, velocity, channel+1);  
     blink();
 }
 
-void onAfterTouchPoly(uint8_t channel, uint8_t note, uint8_t pressure, uint16_t timestamp)
+void onAfterTouchPoly(uint8_t channel, uint8_t note, uint8_t pressure, uint16_t timestamp) // ignored  and not implemented on stm32 side, sorry
 {
-
     if (text_debug)
     {
-
         Serial.printf("Polyphonic after touch : channel %d, note %d, pressure %d (timestamp %dms)\n", channel+1, note, pressure, timestamp);
     }
-    else
-    {
-       // midi_key_pressure(channel, note, pressure);
-    }
-
-    blink();
-}
-
-void onControlChange(uint8_t channel, uint8_t controller, uint8_t value, uint16_t timestamp)
-{
-    if (text_debug)
-    {
-        Serial.printf("Control change : channel %d, controller %d, value %d (timestamp %dms)\n", channel+1, controller, value, timestamp);
-    }
-    else
-    {
-       // midi_controller_change(channel, controller, value);
-    }
-
-    blink();
-}
-
-void onProgramChange(uint8_t channel, uint8_t program, uint16_t timestamp)
-{
-    if (text_debug)
-    {
-        Serial.printf("Program change : channel %d, program %d (timestamp %dms)\n", channel+1, program, timestamp);
-    }
-    else
-    {
-        //  midi_program_change(byte channel, byte program);   // disabled as  I do not want to send it to MDX
-    }
+    UART_MIDI.sendAfterTouch(note, pressure, channel+1);
 
     blink();
 }
@@ -107,14 +75,31 @@ void onAfterTouch(uint8_t channel, uint8_t pressure, uint16_t timestamp)
     {
         Serial.printf("After touch : channel %d, pressure %d (timestamp %dms)\n", channel+1, pressure, timestamp);
     }
-    else
-    {
-
-     //   midi_channel_pressure(channel, pressure); // have no idea if it works
-    }
-
+    UART_MIDI.sendAfterTouch(pressure, channel+1);
     blink();
 }
+
+void onControlChange(uint8_t channel, uint8_t controller, uint8_t value, uint16_t timestamp)
+{
+    if (text_debug)
+    {
+        Serial.printf("Control change : channel %d, controller %d, value %d (timestamp %dms)\n", channel+1, controller, value, timestamp);
+    }
+    UART_MIDI.sendControlChange(controller, value, channel+1);
+    blink();
+}
+
+void onProgramChange(uint8_t channel, uint8_t program, uint16_t timestamp)  // sent to STM32 but commented out there for personal reasons
+{
+    if (text_debug)
+    {
+        Serial.printf("Program change : channel %d, program %d (timestamp %dms)\n", channel+1, program, timestamp);
+    }
+    UART_MIDI.sendProgramChange(	program,  channel+1);	
+    blink();
+}
+
+
 
 void onPitchbend(uint8_t channel, uint16_t value, uint16_t timestamp)
 {
@@ -122,11 +107,7 @@ void onPitchbend(uint8_t channel, uint16_t value, uint16_t timestamp)
     {
         Serial.printf("Pitch bend : channel %d, value %d (timestamp %dms)\n", channel+1, value, timestamp);
     }
-    else
-    {
-      //  midi_pitch_bend(channel, value);
-    }
-
+    UART_MIDI.sendPitchBend ( value,channel+1);
     blink();
 }
 
@@ -136,23 +117,19 @@ void connected()
       Serial.println("Connected client");
 }
 
-void setup()
-{
-    pinMode(ONBOARD_LED, OUTPUT);
-    
-    Serial.begin(115200);
-    TxRxSerial.begin(31250, SERIAL_8N1, 16, 17);
-    DIN_MIDI.begin(MIDI_CHANNEL_OMNI);
 
+void init_ble()
+{
     BLEMidiClient.begin("MIDI device");
     BLEMidiClient.setOnConnectCallback(connected);
-
     BLEMidiClient.setOnDisconnectCallback([]() { // To show how to make a callback with a lambda function
         if (text_debug)
             Serial.println("Disconnected from srv");
-    });
+        
+    });     
 
-    // what to do when we get midi stuff from BLE
+
+// what to do when we get midi stuff from BLE
 
     BLEMidiClient.setNoteOnCallback(onNoteOn);
     BLEMidiClient.setNoteOffCallback(onNoteOff);
@@ -170,21 +147,24 @@ void setup()
     // delay(2000);  // useless delay. Safety measure to be able read all the debug stuff from Serial console.
 }
 
+void setup()
+{
+    pinMode(ONBOARD_LED, OUTPUT);
+    
+    Serial.begin(115200);
+    TxRxSerial.begin(BAUD_RATE, SERIAL_8N1, 16, 17);
+    UART_MIDI.begin(MIDI_CHANNEL_OMNI);
+
+    init_ble();
+    
+}
+
 void loop()
 {
 
-    /// Serial.println("loop");
-
     if (BLEMidiClient.isConnected())
     {
-        if (blink_counter <= 0)
-        {
-            digitalWrite(ONBOARD_LED, 1);
-        }
-        else
-        {
-            blink_counter--;
-        }
+        unblink();
     }
     else
     {
@@ -208,7 +188,10 @@ void loop()
                 if (text_debug)
                     Serial.println(BLEMidiClient.getScannedDevice(i)->getName().c_str());
 
-                if (strcmp(BLEMidiClient.getScannedDevice(i)->getName().c_str(), DEVICE_TO_CONNECT) == 0)
+                if (
+                    (strcmp(BLEMidiClient.getScannedDevice(i)->getName().c_str(), DEVICE_TO_CONNECT1) == 0)  ||
+                    (strcmp(BLEMidiClient.getScannedDevice(i)->getName().c_str(), DEVICE_TO_CONNECT2) == 0)  ||
+                     connect_to_any)
                 {
                     if (text_debug)
                      Serial.println("That's the one, let's try connecting");
