@@ -4,7 +4,7 @@
 This is an DIY  implementation of  MIDI BLE  USB dongle  (similar to M-Vave MS-1 or CME WIDI devices).
 It is created solely for my purpose of connecting Artiphon Orba 2 as a BLE MIDI controller to control linux-based Mod Duo X guitar processor/synth.
 
-Being a MIDI class compliant thing, it with  on Windows as well, and probably would work even with linux, mac and phones. But I have not tried.
+Being a MIDI class compliant thing, it  works with on Windows as well, and probably would work even with pc linux, mac and phones. But I have not tried.
 
 It consists of two different controllers working together:
 
