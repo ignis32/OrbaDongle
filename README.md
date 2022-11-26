@@ -47,6 +47,7 @@ ESP32 GND connected to GND of STM32   // ground
 Q&A:
 
 Q: There are four data conversions, how bad is the input lag?
+
 A: Still testing it on my MDX and playing with baud rates. At this point it is noticable when playing drum synths, but tolerable. 
 For non-drum synths it feels ok.
 
@@ -55,14 +56,17 @@ Lag does exist, you are warned.
 
 
 Q: How to build all this stuff ?
+
 A: This stuff is two separate Platform.IO projects (Platformio is an extension for VSCode). Probably you will need to undrestand how to use Platformio.
    STM32 is set to be flashed using STLINK, if you want to upload firmware other way, you will have to modify platformio.ini file.
 
 Q: Will it work with Orba 1 ?
+
 A: I have no idea. It probably could - they are quite similar after all, and I've tried to guess device as "Artiphon Orba"  
 and added this name to filter, but I do not have Orba  1 to test.
 
 Q: Will it work as generic poor man's WIDI replacement with other MIDI devices?
+
 A: With some customization, I guess. 
 
    First of all, there are two filters DEVICE_TO_CONNECT1 DEVICE_TO_CONNECT2 defined in main.cpp of orbadongle_ESP32_ble_client.
@@ -79,9 +83,12 @@ A: With some customization, I guess.
 	
 
 Q: Can I send midi back to Orba2? 
+
 A: It is possible to write such code, but it is not yet implemented. Communication is one directional at the moment. I do not have reasons to implement opposite direction right now, but maybe later.
    
+   
 Q: What messages forwarding is implemented?
+
 A: NoteOn, NoteOff, Pitchbend, ControlChange, ChannelAftertouch.  
    Also ProgramChange is possible and implemented, but is commented out, as it does not meet my personal use case.
    
