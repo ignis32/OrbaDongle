@@ -1,5 +1,14 @@
 # OrbaDongle
 
+!! warning.  
+
+introduced input lag makes this solution uncomfortable when playing drums.
+Sometimes NoteOns hang randomly without closing NoteOff.
+I would consider current state as "meeeeh". Keeping this code just for history at the moment.
+
+!!
+
+
 
 This is an DIY  implementation of  MIDI BLE  USB dongle  (similar to M-Vave MS-1 or CME WIDI devices).
 It is created solely for my purpose of connecting Artiphon Orba 2 as a BLE MIDI controller to control linux-based Mod Duo X guitar processor/synth.
